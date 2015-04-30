@@ -1,2 +1,5 @@
 target
-.iml
+*.iml
+.idea
+pom.xml
+.lein-failures

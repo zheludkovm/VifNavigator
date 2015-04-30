@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+  <string name="app_name">ВИФ Навигатор</string>
+  <string name="format_bold_black"><![CDATA[<font color=\"#000000\"><b>:%s</b><font>]]></string>
+  <string name="main_title"><![CDATA[<font color=\"#1E581E\"><b>ВИФ2NE</b></font>]]></string>
+
+  <string name="process_loading_message">Загрузка сообщения</string>
+  <string name="error_loading_message">Не удалось скачать сообщение!</string>
+  <string name="process_loading_tree">Загрузка данных</string>
+  <string name="error_loading_tree">Не удалось загрузить данные!</string>
+  <string name="process_tree">Обработка данных</string>
+  <string name="error_process_tree">Не удалось загрузить данные!</string>
+
+  <string name="message_format" formatted="false"><![CDATA[
+    %s<br>
+    Дата <b> %s <b><br><br>
+    %s
+    ]]></string>
+
+  <string name="title_format" formatted="false"><![CDATA[От <b> %s <b><br>]]></string>
+
+
+</resources>
