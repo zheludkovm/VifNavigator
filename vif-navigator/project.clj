@@ -22,7 +22,6 @@
                                  {:dependencies [[org.clojure-android/tools.nrepl "0.2.6"]]
                                   :target-path  "target/debug"
                                   :android      {:aot                     :all-with-unused
-                                                 ;:rename-manifest-package "ru.vif.debug"
                                                  :manifest-options        {:app-name "VifNavigator - debug"}}}]
                        :release
                                 [:android-common
@@ -37,6 +36,7 @@
                                                 :ignore-log-priority [:debug :verbose]
                                                 :aot                 :all-with-unused
                                                 :build-type          :release}}]
+
                        :lean
                                 [:release
                                  {:dependencies ^:replace [[org.skummet/clojure-android "1.7.0-alpha5-r2" :use-resources true]
@@ -78,5 +78,5 @@
 
 
                       }
-            :aliases {"build" ["droid" "doall" "-e"]}
+            :aliases {"build" [["droid" "doall" "-e"]]}
             )
