@@ -207,6 +207,7 @@
                                          :display-options    :show-title
                                          })
                  )
+               (full-reload this)
                )
              :on-create-options-menu
              (fn [this menu]
