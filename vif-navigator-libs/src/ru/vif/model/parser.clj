@@ -5,72 +5,75 @@
 (import org.jsoup.Jsoup)
 (import ru.vif.model.jsoup_parser.tree-entry)
 
+(defn is-visited?
+  (^Boolean [^tree-entry entry visited-set]
+   (contains? visited-set (:link entry))
+    )
+  )
 
-(defn trim-tree-by-depth [[first-entry & tree] ^long depth]
+(defn update-visited
+  [^Boolean is-visited ^tree-entry entry]
+  (if is-visited
+    (assoc entry :is-visited true)
+    entry)
+  )
+
+(defn check-update-visited [^tree-entry entry visited-set]
+  (update-visited (is-visited? entry visited-set) entry)
+  )
+
+
+(defn trim-tree-by-depth [^long depth visited-set [first-entry & tree]]
   "Обрезает дерево до заданной глубины"
-  (time (reverse (reduce
-                   (fn [list ^tree-entry entry]
-                     (let [[^tree-entry prev & rest] list
-                           ^int cur-depth (:depth entry)]
-                       (if (>= cur-depth depth)
-                         (conj rest (update-in prev [:child-count] inc))
-                         (conj rest prev entry)
+  (time (if (nil? first-entry)
+          []
+          (reverse (reduce
+                     (fn [list ^tree-entry entry]
+                       (let [[^tree-entry prev & rest] list
+                             ^int cur-depth (:depth entry)
+                             ^Boolean is-visited (is-visited? entry visited-set)
+                             ]
+                         (if (>= cur-depth depth)
+                           (let [updated-prev (update-in prev [:child-count] inc)
+                                 updated-prev-2 (if is-visited
+                                                  updated-prev
+                                                  (update-in updated-prev [:non-visited-childs] inc)
+                                                  )]
+                             (conj rest updated-prev-2)
+                             )
+                           (conj rest prev (update-visited is-visited entry))
+                           )
                          )
-                       )
-                     ) [first-entry] tree)
-                 ))
+                       ) [(check-update-visited first-entry visited-set)] tree)
+                   ))
+        )
   )
 
-(defn calc-sub-depth [tree ^long depth]
-  "Вычисляет количество дочерних элементов узла дерева"
-  (loop [[^tree-entry next & rest :as full-list] tree
-         count 0
-         ]
-    (if (some? next)
-      (let [^long next-depth (:depth next)]
-        (if (> next-depth depth)
-          (recur rest (inc count))
-          [count full-list]
-          )
-        )
-      [count rest]
-      )
-    )
-  )
-
-(defn trim-tree-by-depth2 [tree ^long depth]
-  "Обрезает дерево до заданной глубины - однопроходный алгоритм"
-  (let [dec-depth (dec depth)]
-    (loop [result []
-           [entry & rest] tree
-           ]
-      (if (nil? entry)
-        result
-        (let [cur-depth (:depth entry)]
-          (if (= cur-depth dec-depth)
-            ;calc count
-            (let [[count rest-rest] (calc-sub-depth rest dec-depth)]
-              ;(println "child-count=" count "rest-rest" rest-rest)
-              (recur (conj result (assoc entry :child-count count)) rest-rest))
-            ;simple add
-            (recur (conj result entry) rest)
-            )
-          )
-        )
-      )
-    )
-  )
+;
 
 (defn parse-tree-internal [^Document doc]
   "Разбирает документ и генерирует дерево"
   (jp/parse-element (time (.body doc)))
   )
 
+
+(defn tree-starting-at [tree ^String link]
+  "находит в дереве узел с заданной ссылкой на сообщение, возвращает sequence из оставщися узлов"
+  (drop-while #(not= link (:link %)) tree
+              )
+  )
+
+(def find-one-element
+  "находит в дереве узел с заданной ссылкой на сообщение, возвращает найденный элемент"
+  (comp first tree-starting-at)
+  )
+
 (defn parse-tree
   "Генерирует jsoup модель и разбирает ее"
   ([^InputStream is
     ^String charset
-    ^String baseUri]
+    ^String baseUri
+    ]
    (parse-tree-internal (Jsoup/parse is charset baseUri))
     )
 
@@ -80,64 +83,19 @@
     )
   )
 
-(defn download-parse-tree
-  "Выкачивает страницу, генерирует jsoup модель и разбирает ее"
-  ([^String url
-    ^long timeout
-    ]
-   (parse-tree-internal
-     (-> (Jsoup/connect url)
-         (.timeout timeout)
-         .get
-         )
-     )
-    )
-  )
-
-
-
-(defn find-element [tree ^String link]
-  "находит в дереве узел с заданной ссылкой на сообщение, возвращает sequence из оставщися узлов"
-  (drop-while #(not= link (:link %)) tree
-              )
-  )
-
-(def find-one-element
-  "находит в дереве узел с заданной ссылкой на сообщение, возвращает найденный элемент"
-  (comp first find-element)
-  )
-
-(defn has-childs [tree ^String link]
-  "Проверяет, если ли дочерние узлы у заданного узла"
-  (let [elements (find-element tree link)]
-    (if-let [[check-entry next-entry & rest] elements]
-      (and (some? next-entry) (> (:depth next-entry) (:depth check-entry)))
-      false
-      )
-    )
-  )
-
-(defn sub-tree [tree ^String link ^long depth]
+(defn sub-tree [tree ^String link ^long depth visited-set]
   "Возвращает поддерево заданного узла, заданной глубины и с пересчитаными глубинами внутри поддерева"
-  (let [[found-entry & rest] (find-element tree link)]
+  (let [[found-entry & rest] (tree-starting-at tree link)]
     (if (nil? found-entry)
-      nil
-      (trim-tree-by-depth
-        (map
-          #(update-in % [:depth] - (:depth found-entry))
-          (cons found-entry (take-while #(< (:depth found-entry) (:depth %)) rest))
+      []
+      (let [^long found-entry-depth (:depth found-entry)]
+        (->>
+          (take-while #(< found-entry-depth (:depth %)) rest)
+          (map #(update-in % [:depth] - found-entry-depth))
+          (trim-tree-by-depth depth visited-set)
           )
-        depth
         )
       )
-    )
-  )
-
-(defn parent [tree ^String link]
-  "Возвращает parent узел"
-  (let [[found-entry & rest] (find-element (reverse tree) link)]
-    (first (filter #(< (:depth %) (:depth found-entry)) rest)
-           )
     )
   )
 

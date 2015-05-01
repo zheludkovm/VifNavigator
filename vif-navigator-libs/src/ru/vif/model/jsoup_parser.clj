@@ -6,7 +6,7 @@
 (import org.jsoup.Jsoup)
 (import org.jsoup.nodes.Element)
 
-(defrecord tree-entry [^long depth, ^String title, ^String link, ^int child-count, ^String post-author, ^String info])
+(defrecord tree-entry [^long depth, ^String title, ^String link, ^int child-count, ^String post-author, ^String info, ^Boolean is-visited ^long non-visited-childs])
 
 (defn element-tag
   (^String [^Element element]
@@ -34,7 +34,6 @@
                   (filter #(= (element-tag %) tag))
                   first
                   )]
-    ;(println found-element)
     (.html found-element)
     )
   )
@@ -64,7 +63,7 @@
             ^Element next-element (.nextElementSibling element)
             ^Element next-next-element (.nextElementSibling next-element)
             ]
-        (tree-entry. tree-depth (.html element) href 0 (.html next-element) (.html next-next-element))
+        (tree-entry. tree-depth (.html element) href 0 (.html next-element) (.html next-next-element) false 0 )
         ;(tree-entry. tree-depth (.html element) href 0 (sibling-html element "b") (sibling-html element "i"))
         )
       ;разделитель

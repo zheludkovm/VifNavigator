@@ -22,6 +22,11 @@
         (to-str-entry entry)
         ":"
         (:child-count entry)
+        ":"
+        (:is-visited entry)
+        ":"
+        (:non-visited-childs entry)
+
         )
       )
     )
@@ -35,10 +40,13 @@
     ;  (parse-tree (io/input-stream "test-resources/tree-small2.html") "CP1251" "tree.html")
     ;  )
     (let [
+          visited-set #{"2681883.htm",
+                        "2681661.htm"
+                        }
           tree (parse-tree (io/input-stream "test-resources/tree.html") "CP1251" "tree.html")
           ;tree (parse-tree (io/input-stream "test-resources/tree-small2.html") "CP1251" "tree.html")
           ;tree (download-parse-tree "http://vif2ne.ru/nvk/forum/0/co/tree" 20000)
-          trimmed-tree (trim-tree-by-depth2 tree 2)
+          trimmed-tree (trim-tree-by-depth 2 visited-set tree )
 
           msg (extract-message-from-html (io/input-stream "test-resources/message2.html") "CP1251" "tree.html")
 
@@ -47,19 +55,23 @@
       (println "----------------------")
       ;(pretty-print tree)
       (println "----------------------")
-      ;(pretty-print trimmed-tree)
+      (pretty-print trimmed-tree)
       (println "----------------------")
-      ;(pretty-print (sub-tree tree "2681745.htm" 3))
+      (pretty-print (sub-tree tree "2681579.htm" 3 visited-set))
+      (println "----------------------")
+      (println "----------------------")
+      (println "subtree2" (sub-tree tree "2682351.htm" 3 visited-set))
+      (pretty-print (sub-tree tree "2682351.htm" 3 visited-set))
       (println "----------------------")
       ;(println (parent tree "2672836.htm" ))
-      (println "----------------------")
+      ;(println "----------------------")
       ;(println msg)
-      (println "has chhilds 1")
-      (println (has-childs tree "2681896.htm"))
-      (println "has chhilds 2")
-      (println (has-childs tree "2681606.htm"))
-      (println "has chhilds 3")
-      (println (has-childs tree "2681418.htm"))
+      ;(println "has chhilds 1")
+      ;(println (has-childs tree "2681896.htm"))
+      ;(println "has chhilds 2")
+      ;(println (has-childs tree "2681606.htm"))
+      ;(println "has chhilds 3")
+      ;(println (has-childs tree "2681418.htm"))
 
 
       ;(io/copy (io/input-stream "http://vif2ne.ru/nvk/forum/0/co/tree") (io/output-stream "test.html"))

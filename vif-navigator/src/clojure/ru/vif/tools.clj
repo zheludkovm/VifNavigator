@@ -30,6 +30,7 @@
 (import android.graphics.Color)
 (import android.graphics.drawable.ColorDrawable)
 (import android.app.Activity)
+(import android.content.Context)
 
 (defn str-res
   (^String [^Activity this ^Integer res]
@@ -114,3 +115,5 @@
       )
     )
   )
+
+
