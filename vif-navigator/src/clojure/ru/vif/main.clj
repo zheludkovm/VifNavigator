@@ -253,33 +253,36 @@
                      ;internal-data (calc-sub-tree link)
                      ]
                  ;(reset! state {:tree-items internal-data})
-                 (on-ui
-                   (let [list-view-tree [:list-view {:id                 ::msg-list-view
-                                                     :adapter            (make-adapter this link state :tree-items)
-                                                     :backgroundResource R$color/even
-                                                     }
-                                         ]]
-                     (set-content-view! this list-view-tree)
-                     (let [list-view (find-view this ::msg-list-view)]
-                       (.addHeaderView list-view (neko.ui/make-ui this [:text-view {:text               (res-format-html this R$string/message_format
-                                                                                                                         (:title tree-entry)
-                                                                                                                         (:info tree-entry)
-                                                                                                                         msg
-                                                                                                                         )
-                                                                                    :max-lines          10000
-                                                                                    :backgroundResource R$color/even
-                                                                                    :movement-method    (LinkMovementMethod.)
-                                                                                    }
-                                                                        ]))
+                 (if (nil? tree-entry)
+                   (.finish this)
+                   (on-ui
+                     (let [list-view-tree [:list-view {:id                 ::msg-list-view
+                                                       :adapter            (make-adapter this link state :tree-items)
+                                                       :backgroundResource R$color/even
+                                                       }
+                                           ]]
+                       (set-content-view! this list-view-tree)
+                       (let [list-view (find-view this ::msg-list-view)]
+                         (.addHeaderView list-view (neko.ui/make-ui this [:text-view {:text               (res-format-html this R$string/message_format
+                                                                                                                           (:title tree-entry)
+                                                                                                                           (:info tree-entry)
+                                                                                                                           msg
+                                                                                                                           )
+                                                                                      :max-lines          10000
+                                                                                      :backgroundResource R$color/even
+                                                                                      :movement-method    (LinkMovementMethod.)
+                                                                                      }
+                                                                          ]))
+                         )
+
                        )
 
+                     (setup-action-bar this {
+                                             :title              (res-format-html this R$string/title_format (:post-author tree-entry))
+                                             :backgroundDrawable (.. this getResources (getDrawable R$color/odd))
+                                             :display-options    [:home-as-up :show-title]
+                                             })
                      )
-
-                   (setup-action-bar this {
-                                           :title              (res-format-html this R$string/title_format (:post-author tree-entry))
-                                           :backgroundDrawable (.. this getResources (getDrawable R$color/odd))
-                                           :display-options    [:home-as-up :show-title]
-                                           })
                    )
                  )
                )
@@ -293,6 +296,16 @@
                  (find-view this ::msg-list-view)
                  (.state this)
                  (calc-sub-tree (get-activity-param this LINK))
+                 )
+               )
+             :on-restart
+             (fn [^Activity this]
+               (let [link (get-activity-param this LINK)
+                     entity (find-one-element (:full-data @tree-data-store) link)
+                     ]
+                 (if (nil? entity)
+                   (.finish this)
+                   )
                  )
                )
 
