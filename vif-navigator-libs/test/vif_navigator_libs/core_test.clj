@@ -26,6 +26,10 @@
         (:is-visited entry)
         ":"
         (:non-visited-childs entry)
+        ":"
+        (:info entry)
+        ":"
+        (:post-time entry)
 
         )
       )
@@ -46,7 +50,7 @@
           tree (parse-tree (io/input-stream "test-resources/tree.html") "CP1251" "tree.html")
           ;tree (parse-tree (io/input-stream "test-resources/tree-small2.html") "CP1251" "tree.html")
           ;tree (download-parse-tree "http://vif2ne.ru/nvk/forum/0/co/tree" 20000)
-          trimmed-tree (trim-tree-by-depth 2 visited-set tree )
+          trimmed-tree (sort-tree (trim-tree-by-depth 1 visited-set tree ))
 
           msg (extract-message-from-html (io/input-stream "test-resources/message2.html") "CP1251" "tree.html")
 

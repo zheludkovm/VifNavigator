@@ -4,9 +4,20 @@
            (java.io InputStream)
            (org.jsoup.nodes Node Document)))
 (import org.jsoup.Jsoup)
+(import java.util.Date)
 (import org.jsoup.nodes.Element)
+(import java.text.SimpleDateFormat)
 
-(defrecord tree-entry [^long depth, ^String title, ^String link, ^int child-count, ^String post-author, ^String info, ^Boolean is-visited ^long non-visited-childs])
+(defrecord tree-entry [^long depth,
+                       ^String title,
+                       ^String link,
+                       ^int child-count,
+                       ^String post-author,
+                       ^String info,
+                       ^Boolean is-visited
+                       ^long non-visited-childs
+                       ^long post-time
+                       ])
 
 (defn element-tag
   (^String [^Element element]
@@ -48,6 +59,14 @@
       )
   )
 
+(def ^SimpleDateFormat TIME_FORMAT (SimpleDateFormat. "dd.MM.yyyy HH:mm:ss"))
+
+(defn parse-time [^String info]
+  (let[^Date date (.parse TIME_FORMAT info)]
+    (.getTime date)
+    )
+  )
+
 (defn parse-one-element [^Element element]
   "Разбирает один элемент jsoup, возвращает либо инициализированную tree-entity, либо строку hr, либо nil"
   (let [^String tagName (element-tag element)
@@ -62,8 +81,11 @@
       (let [^int tree-depth (calc-depth element)
             ^Element next-element (.nextElementSibling element)
             ^Element next-next-element (.nextElementSibling next-element)
+            ^String post-author (.html next-element)
+            ^String info (.html next-next-element)
+            ^long post-time (parse-time info)
             ]
-        (tree-entry. tree-depth (.html element) href 0 (.html next-element) (.html next-next-element) false 0 )
+        (tree-entry. tree-depth (.html element) href 0 post-author info false 0 post-time)
         ;(tree-entry. tree-depth (.html element) href 0 (sibling-html element "b") (sibling-html element "i"))
         )
       ;разделитель
@@ -73,6 +95,7 @@
       )
     )
   )
+
 
 
 (defn parse-element

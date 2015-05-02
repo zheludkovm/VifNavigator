@@ -22,6 +22,13 @@
   (update-visited (is-visited? entry visited-set) entry)
   )
 
+(defn check-max-post-time [^Long parent-time ^Long check-time]
+  (if (> check-time parent-time)
+    check-time
+    parent-time
+    )
+  )
+
 
 (defn trim-tree-by-depth [^long depth visited-set [first-entry & tree]]
   "Обрезает дерево до заданной глубины"
@@ -31,13 +38,15 @@
                      (fn [list ^tree-entry entry]
                        (let [[^tree-entry prev & rest] list
                              ^int cur-depth (:depth entry)
+                             ^long post-time (:post-time entry)
                              ^Boolean is-visited (is-visited? entry visited-set)
                              ]
                          (if (>= cur-depth depth)
                            (let [updated-prev (update-in prev [:child-count] inc)
+                                 updated-prev1 (update-in updated-prev [:post-time] #(check-max-post-time % post-time))
                                  updated-prev-2 (if is-visited
-                                                  updated-prev
-                                                  (update-in updated-prev [:non-visited-childs] inc)
+                                                  updated-prev1
+                                                  (update-in updated-prev1 [:non-visited-childs] inc)
                                                   )]
                              (conj rest updated-prev-2)
                              )
@@ -99,3 +108,17 @@
     )
   )
 
+(defn calc-post-weight[^tree-entry entry]
+  (let [^String title (:title entry)
+        ^Long time (:post-time entry)
+        ]
+    (if (.contains title "<b>")
+      (+ time 1000000000000)
+      time
+      )
+    )
+  )
+
+(defn sort-tree [tree]
+  (sort #(compare (calc-post-weight %2) (calc-post-weight %1)) tree)
+  )

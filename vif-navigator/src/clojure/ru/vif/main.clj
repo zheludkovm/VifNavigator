@@ -89,7 +89,7 @@
   (future
     (let [body (with-progress this R$string/process_loading_tree R$string/error_loading_tree download-vif-content)
           full-data (with-progress this R$string/process_tree R$string/error_process_tree #(parser/parse-tree body vif-url))
-          tree-data (parser/trim-tree-by-depth MAIN_DEPTH @visited-set full-data)]
+          tree-data (parser/sort-tree (parser/trim-tree-by-depth MAIN_DEPTH @visited-set full-data))]
       (on-ui
         (reset! tree-data-store {:tree-items tree-data
                                  :full-data  full-data})
